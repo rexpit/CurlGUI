@@ -57,7 +57,7 @@ namespace CurlGUI
                 sbCmd.Append("-R ");
             if (optionE)
                 sbCmd.Append("-e " + referer + " ");
-            sbCmd.Append(url + " -o " + savePath);
+            sbCmd.Append("\"" + url + "\" -o " + savePath);
 
             this.TextStdout.Text += sbCmd.ToString() + "\n";
 
