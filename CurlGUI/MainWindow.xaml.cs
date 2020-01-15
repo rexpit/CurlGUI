@@ -114,7 +114,7 @@ namespace CurlGUI
             }
             var sfd = new SaveFileDialog
             {
-                Filter = "すべてのファイル|*.*|画像ファイル|*.png;*.jpg;*.gif",
+                Filter = "すべてのファイル|*.*|画像ファイル|*.png;*.jpg;*.gif|JPEG|*.jpg|PNG|*.png",
                 FileName = initialFileName
             };
             bool? result = sfd.ShowDialog(this);
