@@ -18,13 +18,17 @@
             <ColumnDefinition></ColumnDefinition>
         </Grid.ColumnDefinitions>
         <Label Grid.Row="0" Grid.Column="0">URL</Label>
-        <TextBox Name="TextUrl" Text="https://" Grid.Row="0" Grid.Column="1"></TextBox>
+        <TextBox Name="TextUrl" Text="https://" Grid.Row="0" Grid.Column="1" KeyDown="TextUrl_KeyDown"></TextBox>
         <Label Grid.Row="1" Grid.Column="0">オプション</Label>
         <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="1">
             <CheckBox Name="ChkOptionR" IsChecked="True" Content="-R (Last-Modified を更新日付にする)"></CheckBox>
             <StackPanel Orientation="Horizontal">
                 <CheckBox Name="ChkOptionE" IsChecked="False" Content="-e (Referer を設定する)"></CheckBox>
                 <TextBox Name="TextReferer" Text="https://www.pixiv.net" IsEnabled="{Binding ElementName=ChkOptionE, Path=IsChecked, TargetNullValue=false}" MinWidth="100"></TextBox>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <CheckBox Name="ChkOptionA" IsChecked="False" Content="-A (UserAgent を設定する)"></CheckBox>
+                <TextBox Name="TextUserAgent" Text="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0" IsEnabled="{Binding ElementName=ChkOptionA, Path=IsChecked, TargetNullValue=false}" MinWidth="100"></TextBox>
             </StackPanel>
         </StackPanel>
         <Button Name="ButtonSave" Click="ButtonSave_Click" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">保存</Button>

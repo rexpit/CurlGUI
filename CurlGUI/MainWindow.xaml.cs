@@ -29,35 +29,72 @@ namespace CurlGUI
         }
 
         /// <summary>
+        /// URL 入力テキストボックス Enter キー押下
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void TextUrl_KeyDown(object sender, KeyEventArgs e)
+        {
+            // Enter キー押下
+            if (e.Key == Key.Enter)
+            {
+                MakeAndExcecuteCurlCommand();
+            }
+        }
+
+        /// <summary>
         /// 「保存」ボタンクリック
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void ButtonSave_Click(object sender, RoutedEventArgs e)
         {
+            MakeAndExcecuteCurlCommand();
+        }
+
+        /// <summary>
+        /// 「保存」ボタン押下時処理
+        /// </summary>
+        private void MakeAndExcecuteCurlCommand()
+        {
             // エラーチェック
             if (this.HasError())
+            {
                 return;
+            }
 
             // パラメータ設定
             string url = this.TextUrl.Text;
             bool optionR = this.ChkOptionR.IsChecked.HasValue ? this.ChkOptionR.IsChecked.Value : false;
             bool optionE = this.ChkOptionE.IsChecked.HasValue ? this.ChkOptionE.IsChecked.Value : false;
             string referer = this.TextReferer.Text;
+            bool optionA = this.ChkOptionA.IsChecked.HasValue ? this.ChkOptionA.IsChecked.Value : false;
+            string userAgent = this.TextUserAgent.Text;
 
             // 保存先取得
             string savePath = this.GetSaveFilePath(url);
             if (string.IsNullOrEmpty(savePath))
+            {
                 return;
+            }
 
             // コマンド生成
             var sbCmd = new StringBuilder();
-            sbCmd.Append(Environment.GetEnvironmentVariable("SystemRoot") + @"\system32\curl.exe ");
+            sbCmd.AppendFormat("{0}{1}", Environment.GetEnvironmentVariable("SystemRoot"), @"\system32\curl.exe");
+            sbCmd.AppendFormat(@" ""{0}""", url);
             if (optionR)
-                sbCmd.Append("-R ");
+            {
+                sbCmd.Append(" -R");
+            }
             if (optionE)
-                sbCmd.Append("-e " + referer + " ");
-            sbCmd.Append("\"" + url + "\" -o " + savePath);
+            {
+                sbCmd.AppendFormat(@" -e ""{0}""", referer);
+            }
+            if (optionA)
+            {
+                sbCmd.AppendFormat(@" -A ""{0}""", userAgent);
+            }
+            sbCmd.AppendFormat(@" -o ""{1}""", url, savePath);
 
             this.TextStdout.Text += sbCmd.ToString() + "\n";
 
@@ -65,7 +102,7 @@ namespace CurlGUI
             using (var process = Process.Start(new ProcessStartInfo
             {
                 FileName = Environment.GetEnvironmentVariable("ComSpec"),
-                Arguments = "/c " + sbCmd.ToString(),
+                Arguments = string.Format("/c {0}", sbCmd.ToString()),
                 CreateNoWindow = true,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
@@ -110,15 +147,18 @@ namespace CurlGUI
             {
                 Uri u = new Uri(url);
                 if (u.Segments != null && u.Segments.Any())
+                {
                     initialFileName = u.Segments.Last();
+                }
             }
             var sfd = new SaveFileDialog
             {
-                Filter = "すべてのファイル|*.*|画像ファイル|*.png;*.jpg;*.gif|JPEG|*.jpg|PNG|*.png",
+                Filter = "すべてのファイル|*.*|画像ファイル|*.png;*.jpg;*.gif|JPEG|*.jpg|PNG|*.png|GIF|*.gif",
                 FileName = initialFileName
             };
             bool? result = sfd.ShowDialog(this);
-            return (result.HasValue && result.Value) ? sfd.FileName
+            return (result.HasValue && result.Value)
+                ? sfd.FileName
                 : string.Empty;
         }
 
@@ -129,7 +169,8 @@ namespace CurlGUI
         /// <returns>true: URL, false: URLでない</returns>
         public static bool IsUrl(string str)
         {
-            return string.IsNullOrEmpty(str) ? false
+            return string.IsNullOrEmpty(str)
+                ? false
                 : Regex.IsMatch(str, @"(https?|ftp)(:\/\/[-_.!~*\'()a-zA-Z0-9;\/?:\@&=+\$,%#]+)");
         }
     }
