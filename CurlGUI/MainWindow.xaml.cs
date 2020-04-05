@@ -15,6 +15,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using CurlGUI.Settings;
+using CurlGUI.ViewModels;
 
 namespace CurlGUI
 {
@@ -26,6 +28,26 @@ namespace CurlGUI
         public MainWindow()
         {
             InitializeComponent();
+
+            // 設定読み込み
+            LoadSettings();
+        }
+
+        /// <summary>
+        /// アプリ起動時設定を読み込む。
+        /// </summary>
+        private void LoadSettings()
+        {
+            // 読み込み機能は未実装
+            this.DataContext = new MainWindowViewModel
+            {
+                Url = @"https://",
+                Referer = @"https://www.pixiv.net",
+                UserAgent = @"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0",
+                Option_R = true,
+                Option_e = false,
+                Option_A = false
+            };
         }
 
         /// <summary>
@@ -64,12 +86,13 @@ namespace CurlGUI
             }
 
             // パラメータ設定
-            string url = this.TextUrl.Text;
-            bool optionR = this.ChkOptionR.IsChecked.HasValue ? this.ChkOptionR.IsChecked.Value : false;
-            bool optionE = this.ChkOptionE.IsChecked.HasValue ? this.ChkOptionE.IsChecked.Value : false;
-            string referer = this.TextReferer.Text;
-            bool optionA = this.ChkOptionA.IsChecked.HasValue ? this.ChkOptionA.IsChecked.Value : false;
-            string userAgent = this.TextUserAgent.Text;
+            var view = this.DataContext as MainWindowViewModel;
+            string url = view.Url;
+            bool option_R = view.Option_R;
+            bool option_e = view.Option_e;
+            string referer = view.Referer;
+            bool option_A = view.Option_A;
+            string userAgent = view.UserAgent;
 
             // 保存先取得
             string savePath = this.GetSaveFilePath(url);
@@ -82,15 +105,15 @@ namespace CurlGUI
             var sbCmd = new StringBuilder();
             sbCmd.AppendFormat("{0}{1}", Environment.GetEnvironmentVariable("SystemRoot"), @"\system32\curl.exe");
             sbCmd.AppendFormat(@" ""{0}""", url);
-            if (optionR)
+            if (option_R)
             {
                 sbCmd.Append(" -R");
             }
-            if (optionE)
+            if (option_e)
             {
                 sbCmd.AppendFormat(@" -e ""{0}""", referer);
             }
-            if (optionA)
+            if (option_A)
             {
                 sbCmd.AppendFormat(@" -A ""{0}""", userAgent);
             }
@@ -121,17 +144,40 @@ namespace CurlGUI
         /// エラーチェックを行います。
         /// </summary>
         /// <returns></returns>
-        bool HasError()
+        private bool HasError()
         {
-            if (!IsUrl(this.TextUrl.Text))
+            var view = this.DataContext as MainWindowViewModel;
+            // URL チェック
+            if (!IsUrl(view.Url))
             {
                 MessageBox.Show("URL を入力してください。", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return true;
             }
-            if (this.ChkOptionE.IsChecked.HasValue && this.ChkOptionE.IsChecked.Value && !IsUrl(this.TextReferer.Text))
+            // -e オプションが有効
+            if (view.Option_e)
             {
-                MessageBox.Show("Referer の URL を入力してください。", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return true;
+                // URL チェック
+                if (!IsUrl(view.Referer))
+                {
+                    MessageBox.Show("Referer の URL を入力してください。", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return true;
+                }
+                // コマンドインジェクションチェック
+                if (HasCommandInjection(view.Referer))
+                {
+                    MessageBox.Show("Referer に使用不能な文字が含まれています。", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return true;
+                }
+            }
+            // -A オプションが有効
+            if (view.Option_A)
+            {
+                // コマンドインジェクションチェック
+                if (HasCommandInjection(view.UserAgent))
+                {
+                    MessageBox.Show("Referer に使用不能な文字が含まれています。", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return true;
+                }
             }
             return false;
         }
@@ -140,7 +186,7 @@ namespace CurlGUI
         /// ファイル保存ダイアログからファイル保存先を指定します。
         /// </summary>
         /// <returns>ファイルパス (失敗時は空文字)</returns>
-        string GetSaveFilePath(string url = "")
+        private string GetSaveFilePath(string url = "")
         {
             string initialFileName = null;
             if (!string.IsNullOrEmpty(url))
@@ -172,6 +218,18 @@ namespace CurlGUI
             return string.IsNullOrEmpty(str)
                 ? false
                 : Regex.IsMatch(str, @"(https?|ftp)(:\/\/[-_.!~*\'()a-zA-Z0-9;\/?:\@&=+\$,%#]+)");
+        }
+
+        /// <summary>
+        /// 入力された文字列にコマンドインジェクションの可能性がないか判定します。
+        /// </summary>
+        /// <param name="str">文字列</param>
+        /// <returns>true: 問題あり, false: 問題なし</returns>
+        public static bool HasCommandInjection(string str)
+        {
+            return string.IsNullOrEmpty(str)
+                ? false
+                : Regex.IsMatch(str, @"[""\r\n]");
         }
     }
 }
