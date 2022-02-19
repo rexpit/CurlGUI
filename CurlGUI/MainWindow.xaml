@@ -32,6 +32,6 @@
             </StackPanel>
         </StackPanel>
         <Button Name="ButtonSave" Click="ButtonSave_Click" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">保存</Button>
-        <TextBox Name="TextStdout" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" TextWrapping="Wrap"></TextBox>
+        <TextBox Name="TextStdout" Text="{Binding TextStdout}" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" TextWrapping="Wrap"></TextBox>
     </Grid>
 </Window>

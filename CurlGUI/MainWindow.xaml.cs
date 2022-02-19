@@ -15,8 +15,10 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using CurlGUI.Settings;
+using System.Web;
+using CurlGUI.Models;
 using CurlGUI.ViewModels;
+using CurlGUI.Settings;
 
 namespace CurlGUI
 {
@@ -25,6 +27,14 @@ namespace CurlGUI
     /// </summary>
     public partial class MainWindow : Window
     {
+        /// <summary>
+        /// Model
+        /// </summary>
+        private MainWindowModel Model { get; set; } = new MainWindowModel();
+
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
         public MainWindow()
         {
             InitializeComponent();
@@ -39,15 +49,8 @@ namespace CurlGUI
         private void LoadSettings()
         {
             // 読み込み機能は未実装
-            this.DataContext = new MainWindowViewModel
-            {
-                Url = @"https://",
-                Referer = @"https://www.pixiv.net",
-                UserAgent = @"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0",
-                Option_R = true,
-                Option_e = false,
-                Option_A = false
-            };
+            var view = new MainWindowViewModel();
+            this.DataContext = view;
         }
 
         /// <summary>
@@ -119,7 +122,7 @@ namespace CurlGUI
             }
             sbCmd.AppendFormat(@" -o ""{1}""", url, savePath);
 
-            this.TextStdout.Text += sbCmd.ToString() + "\n";
+            view.TextStdout += sbCmd.ToString() + "\n";
 
             // コマンド実行
             using (var process = Process.Start(new ProcessStartInfo
@@ -135,8 +138,8 @@ namespace CurlGUI
                 string stdout = process.StandardOutput.ReadToEnd();
                 string stderr = process.StandardError.ReadToEnd();
                 process.WaitForExit();
-                this.TextStdout.Text += stdout;
-                this.TextStdout.Text += stderr;
+                view.TextStdout += stdout;
+                view.TextStdout += stderr;
             }
         }
 
@@ -175,7 +178,7 @@ namespace CurlGUI
                 // コマンドインジェクションチェック
                 if (HasCommandInjection(view.UserAgent))
                 {
-                    MessageBox.Show("Referer に使用不能な文字が含まれています。", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("UserAgent に使用不能な文字が含まれています。", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     return true;
                 }
             }
@@ -194,7 +197,7 @@ namespace CurlGUI
                 Uri u = new Uri(url);
                 if (u.Segments != null && u.Segments.Any())
                 {
-                    initialFileName = u.Segments.Last();
+                    initialFileName = HttpUtility.UrlDecode(u.Segments.Last());
                 }
             }
             var sfd = new SaveFileDialog
