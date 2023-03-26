@@ -32,6 +32,11 @@ namespace CurlGUI.Settings
         public bool Option_R { get; set; }
 
         /// <summary>
+        /// -L オプションが有効か？
+        /// </summary>
+        public bool Option_L { get; set; }
+
+        /// <summary>
         /// -e オプションが有効か？
         /// </summary>
         public bool Option_e { get; set; }

@@ -20,11 +20,13 @@ namespace CurlGUI.ViewModels
         {
             this.Url = @"https://";
             this.Referer = @"https://www.pixiv.net";
-            this.UserAgent = @"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0";
+            this.UserAgent = @"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/111.0";
             this.Option_R = true;
+            this.Option_L = true;
             this.Option_e = false;
             this.Option_A = false;
             this.TextStdout = string.Empty;
+            this.AreButtonsEnabled = true;
         }
 
         /// <summary>
@@ -46,6 +48,11 @@ namespace CurlGUI.ViewModels
         /// -R オプションが有効か？
         /// </summary>
         public bool Option_R { get; set; }
+
+        /// <summary>
+        /// -L オプションが有効か？
+        /// </summary>
+        public bool Option_L { get; set; }
 
         /// <summary>
         /// -e オプションが有効か？
@@ -73,14 +80,31 @@ namespace CurlGUI.ViewModels
         private string _textStdout;
 
         /// <summary>
-        /// 謎
+        /// ボタンを有効化するか？
+        /// </summary>
+        public bool AreButtonsEnabled {
+            get { return this._areButtonsEnabled; }
+            set
+            {
+                this._areButtonsEnabled = value;
+                // 変更を View に反映
+                RaisePropertyChanged();
+            }
+        }
+        private bool _areButtonsEnabled;
+
+        #region プロパティ変更通知イベント
+        /// <summary>
+        /// プロパティ変更通知イベント
         /// </summary>
         public event System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
 
         /// <summary>
-        /// 謎
+        /// プロパティ変更通知イベントを発生させます。
+        /// 変更を View に反映します。
         /// </summary>
         /// <param name="propertyName"></param>
         private void RaisePropertyChanged([CallerMemberName]string propertyName = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        #endregion
     }
 }

@@ -21,7 +21,10 @@
         <TextBox Name="TextUrl" Text="{Binding Url}" Grid.Row="0" Grid.Column="1" KeyDown="TextUrl_KeyDown"></TextBox>
         <Label Grid.Row="1" Grid.Column="0">オプション</Label>
         <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="1">
-            <CheckBox Name="ChkOptionR" IsChecked="{Binding Option_R}" Content="-R (Last-Modified を更新日付にする)"></CheckBox>
+            <StackPanel Orientation="Horizontal">
+                <CheckBox Name="ChkOptionR" IsChecked="{Binding Option_R}" Content="-R (Last-Modified を更新日付にする)"></CheckBox>
+                <CheckBox Name="ChkOptionL" IsChecked="{Binding Option_L}" Content="-L (リダイレクト先へ自動転送する)"></CheckBox>
+            </StackPanel>
             <StackPanel Orientation="Horizontal">
                 <CheckBox Name="ChkOptionE" IsChecked="{Binding Option_e}" Content="-e (Referer を設定する)"></CheckBox>
                 <TextBox Name="TextReferer" Text="{Binding Referer}" IsEnabled="{Binding ElementName=ChkOptionE, Path=IsChecked, TargetNullValue=false}" MinWidth="100"></TextBox>
@@ -31,7 +34,11 @@
                 <TextBox Name="TextUserAgent" Text="{Binding UserAgent}" IsEnabled="{Binding ElementName=ChkOptionA, Path=IsChecked, TargetNullValue=false}" MinWidth="100"></TextBox>
             </StackPanel>
         </StackPanel>
-        <Button Name="ButtonSave" Click="ButtonSave_Click" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">保存</Button>
+        <Label Grid.Row="2" Grid.Column="0">操作</Label>
+        <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="1">
+            <Button Name="ButtonSave" Click="ButtonSave_Click" Width="100" IsEnabled="{Binding AreButtonsEnabled}">保存</Button>
+            <Button Name="ButtonShowHeader" Click="ButtonShowHeader_Click" Width="100" IsEnabled="{Binding AreButtonsEnabled}">ヘッダー表示のみ</Button>
+        </StackPanel>
         <TextBox Name="TextStdout" Text="{Binding TextStdout}" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" TextWrapping="Wrap"></TextBox>
     </Grid>
 </Window>

@@ -16,6 +16,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Web;
+using CurlGUI.Exceptions;
 using CurlGUI.Models;
 using CurlGUI.ViewModels;
 using CurlGUI.Settings;
@@ -31,6 +32,15 @@ namespace CurlGUI
         /// Model
         /// </summary>
         private MainWindowModel Model { get; set; } = new MainWindowModel();
+
+        /// <summary>
+        /// 押されたボタンの種類
+        /// </summary>
+        private enum SelectedButton
+        {
+            Save,
+            ShowHeaderInfo
+        }
 
         /// <summary>
         /// コンストラクタ
@@ -63,7 +73,25 @@ namespace CurlGUI
             // Enter キー押下
             if (e.Key == Key.Enter)
             {
-                MakeAndExcecuteCurlCommand();
+                var view = this.DataContext as MainWindowViewModel;
+                try
+                {
+                    // ボタンを無効化する。
+                    view.AreButtonsEnabled = false;
+
+                    // 各種ボタン押下時処理を実行する。
+                    MakeAndExcecuteCurlCommand(SelectedButton.Save);
+
+                }
+                catch (ErrorMessageException ex)
+                {
+                    MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                finally
+                {
+                    // ボタンを有効化する。
+                    view.AreButtonsEnabled = true;
+                }
             }
         }
 
@@ -74,13 +102,58 @@ namespace CurlGUI
         /// <param name="e"></param>
         private void ButtonSave_Click(object sender, RoutedEventArgs e)
         {
-            MakeAndExcecuteCurlCommand();
+            var view = this.DataContext as MainWindowViewModel;
+            try
+            {
+                // ボタンを無効化する。
+                view.AreButtonsEnabled = false;
+
+                // 各種ボタン押下時処理を実行する。
+                MakeAndExcecuteCurlCommand(SelectedButton.Save);
+            }
+            catch (ErrorMessageException ex)
+            {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                // ボタンを有効化する。
+                view.AreButtonsEnabled = true;
+            }
         }
 
         /// <summary>
-        /// 「保存」ボタン押下時処理
+        /// 「ヘッダー表示のみ」ボタンクリック
         /// </summary>
-        private void MakeAndExcecuteCurlCommand()
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ButtonShowHeader_Click(object sender, RoutedEventArgs e)
+        {
+            var view = this.DataContext as MainWindowViewModel;
+            try
+            {
+                // ボタンを無効化する。
+                view.AreButtonsEnabled = false;
+
+                // 各種ボタン押下時処理を実行する。
+                MakeAndExcecuteCurlCommand(SelectedButton.ShowHeaderInfo);
+            }
+            catch (ErrorMessageException ex)
+            {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                // ボタンを有効化する。
+                view.AreButtonsEnabled = true;
+            }
+        }
+
+        /// <summary>
+        /// 各種ボタン押下時処理
+        /// </summary>
+        /// <param name="selectedButton">選択されたボタン</param>
+        private void MakeAndExcecuteCurlCommand(SelectedButton selectedButton)
         {
             // エラーチェック
             if (this.HasError())
@@ -92,35 +165,66 @@ namespace CurlGUI
             var view = this.DataContext as MainWindowViewModel;
             string url = view.Url;
             bool option_R = view.Option_R;
+            bool option_L = view.Option_L;
             bool option_e = view.Option_e;
             string referer = view.Referer;
             bool option_A = view.Option_A;
             string userAgent = view.UserAgent;
 
             // 保存先取得
-            string savePath = this.GetSaveFilePath(url);
-            if (string.IsNullOrEmpty(savePath))
+            string savePath = "";
+            if (selectedButton == SelectedButton.Save)
             {
-                return;
+                savePath = this.GetSaveFilePath(url);
+                if (string.IsNullOrEmpty(savePath))
+                {
+                    return;
+                }
             }
 
             // コマンド生成
             var sbCmd = new StringBuilder();
             sbCmd.AppendFormat("{0}{1}", Environment.GetEnvironmentVariable("SystemRoot"), @"\system32\curl.exe");
-            sbCmd.AppendFormat(@" ""{0}""", url);
+            sbCmd.Append($@" ""{url}""");
             if (option_R)
             {
                 sbCmd.Append(" -R");
             }
+            if (option_L)
+            {
+                sbCmd.Append(" -L");
+            }
             if (option_e)
             {
-                sbCmd.AppendFormat(@" -e ""{0}""", referer);
+                sbCmd.Append($@" -e ""{referer}""");
             }
             if (option_A)
             {
-                sbCmd.AppendFormat(@" -A ""{0}""", userAgent);
+                sbCmd.Append($@" -A ""{userAgent}""");
             }
-            sbCmd.AppendFormat(@" -o ""{1}""", url, savePath);
+            // 選択されたボタンにより処理を分岐
+            switch (selectedButton)
+            {
+                // 「保存」ボタン押下時は取得したファイル名を使用
+                case SelectedButton.Save:
+                    if (!string.IsNullOrEmpty(savePath))
+                    {
+                        sbCmd.Append($@" -o ""{savePath}""");
+                    }
+                    else
+                    {
+                        throw new ErrorMessageException("あり得ないパスです。ファイル名の指定がありません。");
+                    }
+                    break;
+
+                // 「ヘッダー表示のみ」ボタン押下時
+                case SelectedButton.ShowHeaderInfo:
+                    sbCmd.Append(" -I");
+                    break;
+
+                default:
+                    throw new ErrorMessageException("あり得ないパスです。switch (selectedButton) default case");
+            }
 
             view.TextStdout += sbCmd.ToString() + "\n";
 
@@ -153,8 +257,7 @@ namespace CurlGUI
             // URL チェック
             if (!IsUrl(view.Url))
             {
-                MessageBox.Show("URL を入力してください。", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return true;
+                throw new ErrorMessageException("URL を入力してください。");
             }
             // -e オプションが有効
             if (view.Option_e)
@@ -162,14 +265,12 @@ namespace CurlGUI
                 // URL チェック
                 if (!IsUrl(view.Referer))
                 {
-                    MessageBox.Show("Referer の URL を入力してください。", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return true;
+                    throw new ErrorMessageException("Referer の URL を入力してください。");
                 }
                 // コマンドインジェクションチェック
                 if (HasCommandInjection(view.Referer))
                 {
-                    MessageBox.Show("Referer に使用不能な文字が含まれています。", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return true;
+                    throw new ErrorMessageException("Referer に使用不能な文字が含まれています。");
                 }
             }
             // -A オプションが有効
@@ -178,8 +279,7 @@ namespace CurlGUI
                 // コマンドインジェクションチェック
                 if (HasCommandInjection(view.UserAgent))
                 {
-                    MessageBox.Show("UserAgent に使用不能な文字が含まれています。", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return true;
+                    throw new ErrorMessageException("UserAgent に使用不能な文字が含まれています。");
                 }
             }
             return false;
