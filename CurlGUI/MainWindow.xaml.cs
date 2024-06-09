@@ -166,6 +166,7 @@ namespace CurlGUI
             string url = view.Url;
             bool option_R = view.Option_R;
             bool option_L = view.Option_L;
+            bool option_k = view.Option_k;
             bool option_e = view.Option_e;
             string referer = view.Referer;
             bool option_A = view.Option_A;
@@ -193,6 +194,10 @@ namespace CurlGUI
             if (option_L)
             {
                 sbCmd.Append(" -L");
+            }
+            if (option_k)
+            {
+                sbCmd.Append(" -k");
             }
             if (option_e)
             {

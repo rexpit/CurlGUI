@@ -20,9 +20,10 @@ namespace CurlGUI.ViewModels
         {
             this.Url = @"https://";
             this.Referer = @"https://www.pixiv.net";
-            this.UserAgent = @"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/111.0";
+            this.UserAgent = @"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:126.0) Gecko/20100101 Firefox/126.0";
             this.Option_R = true;
             this.Option_L = true;
+            this.Option_k = false;
             this.Option_e = false;
             this.Option_A = false;
             this.TextStdout = string.Empty;
@@ -53,6 +54,11 @@ namespace CurlGUI.ViewModels
         /// -L オプションが有効か？
         /// </summary>
         public bool Option_L { get; set; }
+
+        /// <summary>
+        /// -k オプションが有効か？
+        /// </summary>
+        public bool Option_k { get; set; }
 
         /// <summary>
         /// -e オプションが有効か？
